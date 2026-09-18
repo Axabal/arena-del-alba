@@ -1,6 +1,6 @@
 # Publicar con GitHub y Netlify
 
-Estado: proyecto preparado y probado localmente. El repositorio público creado por el usuario es https://github.com/Axabal/arena-del-alba. La subida del código y el despliegue público están pendientes. No se ha contratado ningún servicio de pago.
+Estado: código publicado en https://github.com/Axabal/arena-del-alba y 45 pruebas automáticas superadas localmente. El despliegue de la web y del servidor de partidas sigue pendiente. No se ha contratado ningún servicio de pago.
 
 ## Qué hace cada servicio
 
