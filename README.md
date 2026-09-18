@@ -2,6 +2,8 @@
 
 Juego web original de arena 3 contra 3, en español, con seis héroes, tres mapas, tres modos, bots y salas privadas online. Se puede añadir a la pantalla de inicio en Android y iPhone cuando se publica con HTTPS.
 
+**Jugar online:** https://arena-del-alba-axabal.netlify.app/ — no requiere mantener encendido el ordenador. El servidor gratuito puede tardar alrededor de un minuto en despertar tras un periodo sin uso. Publicación y mantenimiento: [PUBLICAR.md](PUBLICAR.md).
+
 ## Novedades de la edición 0.2
 
 Más resistencia, recuperación fuera de combate, límite al daño acumulado de la ulti del Príncipe, seis héroes ilustrados y articulados, escenarios con texturas, fuego violeta y ondas de energía, carga real de recursos y ventanas de victoria/derrota.

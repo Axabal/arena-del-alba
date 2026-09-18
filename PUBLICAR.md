@@ -1,12 +1,32 @@
 # Publicar con GitHub y Netlify
 
-Estado: código publicado en https://github.com/Axabal/arena-del-alba y 45 pruebas automáticas superadas localmente. El despliegue de la web y del servidor de partidas sigue pendiente. No se ha contratado ningún servicio de pago.
+Estado (18 de septiembre de 2026): web y servidor publicados en planes gratuitos. No se ha contratado ningún servicio de pago ni añadido ninguna tarjeta.
+
+- Juego: https://arena-del-alba-axabal.netlify.app/
+- Código: https://github.com/Axabal/arena-del-alba
+- Servidor: https://arena-del-alba.onrender.com
+- Salud del servidor: https://arena-del-alba.onrender.com/health
+- Netlify: proyecto `arena-del-alba-axabal`, ID `fc61db98-6411-4f38-824d-108e2218cdbe`, plan Free. Producción pública y vistas previas privadas.
+- Render: servicio `arena-del-alba`, ID `srv-damjp6ajnfac73aue000`, Node 24, región Frankfurt, instancia Free.
+
+Verificado: 45 pruebas locales; acceso público sin sesión a HTML, configuración y salud; seis clientes WebSocket remotos entrando en una misma partida y reconexión de un jugador; creación de sala y partida con bots en el navegador público sin errores de consola. No se ha probado todavía con seis teléfonos físicos en redes diferentes.
+
+## Cómo actualizar esta publicación
+
+La publicación actual de Netlify se hizo con **Netlify Drop**, subiendo `dist` compilado, y Render utiliza la URL pública del repositorio. No hay sincronización automática de GitHub configurada: subir un commit por sí solo no actualiza ambos despliegues.
+
+1. Ejecuta las pruebas pertinentes y sube los cambios a GitHub.
+2. En Render, usa **Manual Deploy → Deploy latest commit** cuando cambie el servidor. Mantén la instancia Free. Las actualizaciones interrumpen las partidas activas.
+3. Compila la web con `GAME_SERVER_URL=https://arena-del-alba.onrender.com` y `npm run build:web` (en PowerShell: `$env:GAME_SERVER_URL='https://arena-del-alba.onrender.com'`).
+4. Sube el contenido de `dist` como carpeta o ZIP a **Deploys** del proyecto Netlify existente. No crees otro proyecto.
+
+El servidor tiene `ALLOWED_ORIGINS=https://arena-del-alba-axabal.netlify.app`, `NODE_ENV=production` y `NODE_VERSION=24`. La compilación incluye la dirección pública del servidor en `runtime-config.js`; no contiene credenciales. Las instrucciones siguientes sirven para recrear el despliegue o configurar una futura importación continua desde GitHub.
 
 ## Qué hace cada servicio
 
 - GitHub guarda el código completo de esta carpeta, incluido servidor y gráficos. Puede ser un repositorio privado.
-- Netlify publica la web desde `dist`, generada automáticamente por `npm run build:web`.
-- Un alojamiento Node con WebSockets persistentes ejecuta `npm start`. Render es una opción compatible; no se ha contratado ni desplegado aquí.
+- Netlify publica la web desde `dist`, generada por `npm run build:web`.
+- Render ejecuta el proceso Node con WebSockets persistentes mediante `npm start` en una instancia Free.
 
 Netlify no ejecuta el proceso permanente de partidas actual. No se debe colocar el servidor en una función Netlify ni redirigir `/ws` mediante un proxy HTTP convencional. La conexión segura del navegador va directamente al alojamiento de partidas.
 
