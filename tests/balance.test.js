@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createGame,stepGame} from '../public/shared/engine.js';
+import {HEROES} from '../public/shared/config.js';
+const make=()=>{const g=createGame({players:Object.keys(HEROES).map((hero,i)=>({id:`p${i}`,hero,team:i<3?0:1}))});g.map.obstacles=[];g.players.forEach((p,i)=>{p.x=2+i*4;p.y=3;p.shield=0;});return g;};
+const run=(g,n,input={})=>{for(let i=0;i<n;i++)stepGame(g,1/30,input);};
+test('recovery waits five seconds, then restores eight percent max hp per second',()=>{const g=make(),p=g.players[0];p.hp=10;run(g,150);assert.equal(p.hp,10);run(g,30);assert.ok(Math.abs(p.hp-13.2)<1e-8);run(g,600);assert.equal(p.hp,p.maxHp);});
+test('attacking immediately interrupts recovery and restarts its delay',()=>{const g=make(),p=g.players[0];p.hp=10;run(g,180);const before=p.hp;stepGame(g,1/30,{p0:{attack:true,angle:0}});assert.equal(p.hp,before);run(g,149);assert.equal(p.hp,before);run(g,2);assert.ok(p.hp>before);});
+test('damage interrupts recovery in the same tick and orbs and dead heroes never regenerate',()=>{const g=make(),p=g.players[0],enemy=g.players[4];p.hp=10;run(g,180);enemy.x=p.x+1;enemy.y=p.y;const before=p.hp;stepGame(g,1/30,{[enemy.id]:{attack:true,angle:Math.PI}});assert.ok(Math.abs(p.hp-(before-5))<1e-8);run(g,149);assert.ok(Math.abs(p.hp-(before-5))<1e-8);p.hp=0;p.respawn=5;run(g,100);assert.equal(p.hp,0);const h=createGame({mode:'orb',players:[]});h.orbs[0].hp=80;run(h,600);assert.equal(h.orbs[0].hp,80);});
+test('one prince fan is capped at fourteen total per target, separate casts can hit again',()=>{const g=make(),a=g.players[5],b=g.players[1];a.x=10;a.y=9;b.x=10.7;b.y=9;a.charge=HEROES.prince.charge;const before=b.hp;stepGame(g,1/30,{[a.id]:{ult:true,angle:0}});run(g,15);assert.equal(b.hp,before-14);a.charge=HEROES.prince.charge;stepGame(g,1/30,{[a.id]:{ult:true,angle:0}});run(g,15);assert.equal(b.hp,before-28);assert.ok(g.events.filter(e=>e.type==='damage').every(e=>e.value>0));});

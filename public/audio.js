@@ -1,0 +1,6 @@
+export class GameAudio{
+  constructor(){this.enabled=true;this.context=null;this.lastEvent=0;}
+  unlock(){if(!this.enabled)return;try{this.context||=new (window.AudioContext||window.webkitAudioContext)();if(this.context.state==='suspended')this.context.resume();}catch{}}
+  tone(freq,duration=.1,type='sine',volume=.025){if(!this.enabled||!this.context||this.context.state!=='running')return;const ctx=this.context,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(50,freq*.6),ctx.currentTime+duration);g.gain.setValueAtTime(volume,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+duration);}
+  events(game,myId){for(const e of game.events){if(e.id<=this.lastEvent)continue;if(game.elapsed-e.time<.3){if(e.type==='attack'&&e.owner===myId)this.tone(e.ultimate?520:240,.09,'triangle');if(e.type==='damage'&&e.target===myId)this.tone(130,.12,'triangle',.04);if(e.type==='objective')this.tone(760,.25);if(e.type==='death')this.tone(95,.22,'triangle');}this.lastEvent=Math.max(this.lastEvent,e.id);}}
+}
