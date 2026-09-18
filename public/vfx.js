@@ -1,4 +1,21 @@
+import {fanPolygon,fanPoint} from './shared/zones.js';
 const TAU=Math.PI*2;
+export function traceFan(c,z,project){
+  c.beginPath();fanPolygon(z).forEach((v,i)=>{const p=project(v.x,v.y);i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);});c.closePath();
+}
+function drawBreath(c,z,project,s,time,low){
+  c.save();traceFan(c,z,project);c.clip();
+  const from=project(z.x,z.y),end=fanPoint(z,1),to=project(end.x,end.y);
+  const fog=c.createLinearGradient(from.x,from.y,to.x,to.y);fog.addColorStop(0,'#e8e69c77');fog.addColorStop(.45,'#aac65e99');fog.addColorStop(1,'#65794333');c.fillStyle=fog;traceFan(c,z,project);c.fill();
+  for(let i=0;i<(low?12:32);i++){
+    const t=(i*.137+time*.34)%1,side=Math.sin(i*2.399+time*1.5)*.92;
+    const point=fanPoint(z,t,side),q=project(point.x,point.y);
+    c.globalAlpha=(.3+.2*Math.sin(i+time*3)**2)*Math.min(1,z.remaining);
+    glow(c,q.x,q.y,s*(.17+t*.45),i%3?'#b8d577':'#e3eaa2');
+    if(i%4===0){c.strokeStyle='#edf3bc';c.lineWidth=1.3;c.beginPath();c.arc(q.x,q.y,s*(.025+t*.045),0,TAU);c.stroke();}
+  }
+  c.restore();
+}
 const rand=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 function glow(c,x,y,r,inner,outer='transparent'){
   const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,inner);g.addColorStop(1,outer);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
@@ -43,5 +60,5 @@ export class Effects {
     }c.restore();
   }
   drawParticles(c,project,s){c.save();for(const p of this.particles){const q=project(p.x,p.y),t=p.age/p.life;c.globalAlpha=(1-t)*.85;if(p.kind==='smoke'||p.kind==='dust'){c.globalCompositeOperation='source-over';c.fillStyle=p.color;c.beginPath();c.ellipse(q.x,q.y-(p.kind==='smoke'?t*s*.7:0),(p.size+t*.16)*s,(p.size+t*.09)*s,0,0,TAU);c.fill();}else{c.globalCompositeOperation='lighter';glow(c,q.x,q.y,p.size*s*2,p.color);c.fillStyle='#fff4ca';c.fillRect(q.x,q.y,Math.max(1,p.size*s*.6),Math.max(1,p.size*s*.6));}}c.restore();}
-  drawZones(c,g,project,s,time,low=false){c.save();for(const z of g.zones){const q=project(z.x,z.y);if(z.kind==='poison'){const n=low?6:17;for(let i=0;i<n;i++){const a=i*2.399+time*.3,r=z.r*s*Math.sqrt((i+.5)/n);c.globalAlpha=.13+.13*Math.sin(time*2+i)**2;glow(c,q.x+Math.cos(a)*r,q.y+Math.sin(a)*r*.76-s*.2*Math.sin(time+i),s*.7,'#b4df66');}c.globalAlpha=.6;c.strokeStyle='#d1e891';c.lineWidth=1.5;for(let i=0;i<6;i++){const a=i*1.047+time*.3;c.beginPath();c.arc(q.x+Math.cos(a)*z.r*s*.6,q.y+Math.sin(a)*z.r*s*.4,3+Math.sin(time*5+i)*2,0,TAU);c.stroke();}}else{glow(c,q.x,q.y,z.r*s,'#ef872033');for(let i=0;i<8;i++){const a=i*TAU/8+time*2;c.strokeStyle='#ffe9a4';c.lineWidth=2;c.beginPath();c.moveTo(q.x+Math.cos(a)*z.r*s*.9,q.y+Math.sin(a)*z.r*s*.76*.9);c.lineTo(q.x+Math.cos(a)*z.r*s,q.y+Math.sin(a)*z.r*s*.76);c.stroke();}}}c.restore();}
+  drawZones(c,g,project,s,time,low=false){c.save();for(const z of g.zones){const q=project(z.x,z.y);if(z.shape==='fan'){drawBreath(c,z,project,s,time,low);continue;}if(z.kind==='poison'){const n=low?6:17;for(let i=0;i<n;i++){const a=i*2.399+time*.3,r=z.r*s*Math.sqrt((i+.5)/n);c.globalAlpha=.13+.13*Math.sin(time*2+i)**2;glow(c,q.x+Math.cos(a)*r,q.y+Math.sin(a)*r*.76-s*.2*Math.sin(time+i),s*.7,'#b4df66');}c.globalAlpha=.6;c.strokeStyle='#d1e891';c.lineWidth=1.5;for(let i=0;i<6;i++){const a=i*1.047+time*.3;c.beginPath();c.arc(q.x+Math.cos(a)*z.r*s*.6,q.y+Math.sin(a)*z.r*s*.4,3+Math.sin(time*5+i)*2,0,TAU);c.stroke();}}else{glow(c,q.x,q.y,z.r*s,'#ef872033');for(let i=0;i<8;i++){const a=i*TAU/8+time*2;c.strokeStyle='#ffe9a4';c.lineWidth=2;c.beginPath();c.moveTo(q.x+Math.cos(a)*z.r*s*.9,q.y+Math.sin(a)*z.r*s*.76*.9);c.lineTo(q.x+Math.cos(a)*z.r*s,q.y+Math.sin(a)*z.r*s*.76);c.stroke();}}}c.restore();}
 }

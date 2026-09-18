@@ -1,5 +1,6 @@
 import {HEROES,MODES,COMBAT_RULES,PLAYER_RADIUS as R,MATCH_SECONDS,OVERTIME_SECONDS} from './config.js';
 import {createMap} from './maps.js';
+import {OGRE_BREATH,fanHitsCircle,fanHitsBox} from './zones.js';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const finite=(n,f=0)=>Number.isFinite(n)?n:f;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -44,7 +45,8 @@ function attack(g,p,ult){const h=HEROES[p.hero];if(ult&&p.charge<h.charge)return
     else if(p.hero==='jester'){shoot(g,p,p.angle,'jester',2,5);p.burst={count:2,next:.13,angle:p.angle};}else shoot(g,p,p.angle,p.hero==='prince'?'arrow':'magic',h.damage,h.range);return;}
   if(p.hero==='knight')shoot(g,p,p.angle,'wave',7,8,true);
   if(p.hero==='warlock')shoot(g,p,p.angle,'drain',8,8,true);
-  if(p.hero==='ogre'||p.hero==='jester'){const range=p.hero==='ogre'?5:3;let x=p.x,y=p.y;for(let d=.1;d<=range;d+=.1){const q={x:p.x+Math.cos(p.angle)*d,y:p.y+Math.sin(p.angle)*d};if(q.x<.3||q.x>27.7||q.y<.3||q.y>17.7||g.map.obstacles.some(o=>o.permanent&&inside(q,o)))break;x=q.x;y=q.y;}g.zones.push({id:`zone${++g._id}`,x,y,r:p.hero==='ogre'?1.8:2,team:p.team,owner:p.id,kind:p.hero==='ogre'?'poison':'box',remaining:p.hero==='ogre'?5:.8,next:1,pulses:0});}
+  if(p.hero==='ogre')g.zones.push({id:`zone${++g._id}`,x:p.x,y:p.y,angle:p.angle,shape:'fan',...OGRE_BREATH,r:3,team:p.team,owner:p.id,kind:'poison',remaining:5,next:1,pulses:0});
+  if(p.hero==='jester'){const range=3;let x=p.x,y=p.y;for(let d=.1;d<=range;d+=.1){const q={x:p.x+Math.cos(p.angle)*d,y:p.y+Math.sin(p.angle)*d};if(q.x<.3||q.x>27.7||q.y<.3||q.y>17.7||g.map.obstacles.some(o=>o.permanent&&inside(q,o)))break;x=q.x;y=q.y;}g.zones.push({id:`zone${++g._id}`,x,y,r:2,team:p.team,owner:p.id,kind:'box',remaining:.8,next:1,pulses:0});}
   if(p.hero==='bull')p.dash={remaining:3,angle:p.angle,hit:[]};
   if(p.hero==='prince'){const cast={id:`cast${++g._id}`,damage:Object.create(null)};for(let i=-2;i<=2;i++)shoot(g,p,p.angle+i*.24,'royal',7,3,true,cast);}
 }
@@ -64,8 +66,8 @@ function botInput(g,p,dt){p.botThink-=dt;if(p.botThink>0)return p.botInput;p.bot
   let waypoint=goal;if(!lineClear(g,p,goal)||!canStand(g,p,goal.x,goal.y)){if(g.elapsed>=p.pathUntil||!p.path.length){p.path=route(g,p,goal);p.pathUntil=g.elapsed+.8;}while(p.path.length&&dist(p,p.path[0])<.25)p.path.shift();waypoint=p.path[0]||goal;}else p.path=[];
   const d=dist(p,waypoint),mx=d>.15?(waypoint.x-p.x)/d:0,my=d>.15?(waypoint.y-p.y)/d:0;
   const aim=attackTarget||goal;let angle=Math.atan2(aim.y-p.y,aim.x-p.x)+(random(g)-.5)*.08;
-  // Ground ultimates land a fixed distance ahead; only cast when the target is in their landing area.
-  const ud=dist(p,aim),ultRange={knight:8,ogre:5,warlock:8,jester:3,bull:3,prince:3}[p.hero],ult=p.charge>=h.charge&&ud<=ultRange+.5&&(p.hero!=='ogre'||ud>=3.3)&&(p.hero!=='jester'||ud>=1.2)&&lineClear(g,p,aim,true);
+  // The ogre breathes close ahead; only the jester still throws a zone farther away.
+  const ud=dist(p,aim),ultRange={knight:8,ogre:OGRE_BREATH.range,warlock:8,jester:3,bull:3,prince:3}[p.hero],ult=p.charge>=h.charge&&ud<=ultRange+.5&&(p.hero!=='jester'||ud>=1.2)&&lineClear(g,p,aim,true);
   return p.botInput=input({mx,my,angle,attack:!!attackNow,ult});
 }
 function objectives(g,dt){if(g.mode==='flags'){g._flagTimer+=dt;if(g._flagTimer>=15){g._flagTimer-=15;if(g.flags.filter(f=>!f.carrier).length<3)newFlag(g);}for(const f of [...g.flags]){if(f.carrier){const p=ownerOf(g,f.carrier);if(!p||!alive(p)){f.carrier=null;continue;}f.x=p.x;f.y=p.y;if(dist(p,g.map.portals[p.team])<.9){score(g,p.team);p.stats.objectives++;p.carrying=null;g.flags.splice(g.flags.indexOf(f),1);event(g,'objective',p.x,p.y,{team:p.team,value:1});}}else {f.groundTime+=dt;if(f.groundTime>=15){const point=flagPoint(g,f);f.x=f.homeX=point.x;f.y=f.homeY=point.y;f.groundTime=0;}const p=g.players.find(p=>alive(p)&&!p.carrying&&dist(p,f)<.65);if(p){f.carrier=p.id;p.carrying=f.id;f.groundTime=0;event(g,'pickup',p.x,p.y,{team:p.team,owner:p.id,visibleTo:[0,1].filter(team=>visiblePlayers(g,team).some(v=>v.id===p.id))});}}}}
@@ -78,7 +80,7 @@ export function stepGame(g,dt,inputs={}){if(g.phase!=='playing')return;dt=clamp(
   for(const p of inactive){p.respawn=Math.max(0,p.respawn-dt);if(p.respawn<=.000001)respawn(g,p);}
   for(const p of g.players){if(inactive.has(p)||!alive(p))continue;p.shield=Math.max(0,p.shield-dt);p.cooldown=Math.max(0,p.cooldown-dt);const cmd=p.bot?botInput(g,p,dt):input(inputs?.[p.id]);p.angle=cmd.angle;if(p.dash)dashStep(g,p,dt);else move(g,p,cmd.mx*HEROES[p.hero].speed*dt,cmd.my*HEROES[p.hero].speed*dt);if(p.burst){p.burst.next-=dt;if(p.burst.next<=0){shoot(g,p,p.burst.angle,'jester',2,5);p.burst.count--;p.burst.next+=.13;if(!p.burst.count)p.burst=null;}}if(cmd.ult&&p.charge>=HEROES[p.hero].charge)attack(g,p,true);else if(cmd.attack)attack(g,p,false);}
   g.projectiles=g.projectiles.filter(s=>projectileStep(g,s,dt));
-  for(const z of g.zones){z.remaining-=dt;const owner=ownerOf(g,z.owner);if(!owner)continue;if(z.kind==='box'&&z.remaining<=.000001)blast(g,z.x,z.y,z.r,10,owner,'box');if(z.kind==='poison'){z.next-=dt;while(z.next<=.000001&&z.pulses<5){z.next+=1;z.pulses++;for(const t of targets(g,z.team))if(dist(z,t)<=z.r+(t.hero?R:.7))hurt(g,t,2,owner,true);for(const o of g.map.obstacles)if(dist(z,o)<=z.r+Math.max(o.w,o.h)/2)coverDamage(g,o,2);event(g,'pulse',z.x,z.y,{team:z.team,r:z.r});}}}
+  for(const z of g.zones){z.remaining-=dt;const owner=ownerOf(g,z.owner);if(!owner)continue;if(z.kind==='box'&&z.remaining<=.000001)blast(g,z.x,z.y,z.r,10,owner,'box');if(z.kind==='poison'){z.next-=dt;while(z.next<=.000001&&z.pulses<5){z.next+=1;z.pulses++;for(const t of targets(g,z.team))if(fanHitsCircle(z,t,t.hero?R:.7)&&lineClear(g,z,t,true))hurt(g,t,2,owner,true);for(const o of g.map.obstacles)if(!o.permanent&&fanHitsBox(z,o)&&lineClear(g,z,o,true))coverDamage(g,o,2);event(g,'pulse',z.x,z.y,{team:z.team,r:z.r,shape:z.shape,angle:z.angle,start:z.start,range:z.range,nearWidth:z.nearWidth,farWidth:z.farWidth});}}}
   for(const p of g.players){if(!alive(p))continue;const recovery=Math.min(dt,Math.max(0,g.elapsed-p.lastCombatAt-COMBAT_RULES.regenDelay));if(recovery>1e-8)p.hp=Math.min(p.maxHp,p.hp+p.maxHp*COMBAT_RULES.regenFractionPerSecond*recovery);}
   g.zones=g.zones.filter(z=>z.remaining>.000001);g.map.obstacles=g.map.obstacles.filter(o=>o.hp!==0);objectives(g,dt);
 }

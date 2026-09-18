@@ -1,4 +1,4 @@
-# Arena del Alba · edición 0.2.1
+# Arena del Alba · edición 0.2.2
 
 Juego web original de arena 3 contra 3, en español, con seis héroes, tres mapas, tres modos, bots y salas privadas online. Se puede añadir a la pantalla de inicio en Android y iPhone cuando se publica con HTTPS.
 
@@ -6,9 +6,11 @@ Juego web original de arena 3 contra 3, en español, con seis héroes, tres mapa
 
 ## Novedades de la edición 0.2
 
+La versión 0.2.2 añade el aliento del Ogro en abanico cercano (alcance 3, cinco pulsos de 2 de daño) y coloca por defecto el joystick a la izquierda y los ataques a la derecha. La primera apertura tras actualizar aplica esta nueva disposición; después se puede cambiar en Ajustes.
+
 Más resistencia, recuperación fuera de combate, límite al daño acumulado de la ulti del Príncipe, seis héroes ilustrados y articulados, escenarios con texturas, fuego violeta y ondas de energía, carga real de recursos y ventanas de victoria/derrota.
 
-Para actualizar una instalación anterior, cierra todas las pestañas del juego y vuelve a abrirlo. El pie de la portada debe indicar **0.2.1**.
+Para actualizar una instalación anterior, cierra todas las pestañas del juego y vuelve a abrirlo. El pie de la portada debe indicar **0.2.2**.
 
 ## Abrir en este ordenador
 

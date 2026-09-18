@@ -27,3 +27,7 @@ Las tasas suman las muertes de los seis héroes. Los ataques conjuntos y ultis e
 ## Ajuste 0.2.1
 
 A petición del jugador, el ataque normal del Brujo pasa de alcance 1,5 a 8 unidades, igual que la flecha del Príncipe. Conserva 4 de daño y 0,8 segundos entre ataques. Las simulaciones anteriores corresponden a la versión 0.2, antes de ampliar ese alcance.
+
+## Ajuste 0.2.2
+
+La ulti del Ogro deja de depositar un círculo a 5 unidades. Ahora deja un abanico fijo orientado al lanzar: comienza junto al cuerpo (0,15 unidades por detrás del centro), llega 3 unidades hacia delante y aumenta de 0,6 a 3,4 unidades de anchura total. Conserva cinco pulsos de 2 de daño en cinco segundos y una carga de 24 de daño. Los bordes consideran el tamaño del objetivo; las paredes permanentes bloquean el daño. Los bots pueden utilizarla contra enemigos cercanos. La geometría visible y la de colisión comparten la misma definición. Las simulaciones de la versión 0.2 no evalúan este ajuste.

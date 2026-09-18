@@ -1,5 +1,5 @@
-const CACHE='alba-v2-20260918-r5';
-const SHELL=['/','/index.html','/style.css','/upgrade.css','/fonts.css','/app.js','/connection.js','/runtime-config.js','/renderer.js','/hero-rig.js','/vfx.js','/terrain-art.js','/assets.js','/image-resource.js','/presentation.js','/controls.js','/audio.js','/shared/config.js','/shared/maps.js','/shared/engine.js','/manifest.webmanifest','/icons/icon-192.png','/icons/icon-512.png','/assets/heroes-rig-v2.png','/assets/terrain-atlas-v2.png','/assets/arena-splash-v2.png'];
+const CACHE='alba-v2-20260918-r6';
+const SHELL=['/','/index.html','/style.css','/upgrade.css','/fonts.css','/app.js','/connection.js','/runtime-config.js','/renderer.js','/hero-rig.js','/vfx.js','/terrain-art.js','/assets.js','/image-resource.js','/presentation.js','/controls.js','/audio.js','/shared/config.js','/shared/maps.js','/shared/engine.js','/shared/zones.js','/manifest.webmanifest','/icons/icon-192.png','/icons/icon-512.png','/assets/heroes-rig-v2.png','/assets/terrain-atlas-v2.png','/assets/arena-splash-v2.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL))));
 // A new worker waits until all existing game tabs close; never interrupt a match.
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
